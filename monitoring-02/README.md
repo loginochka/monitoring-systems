@@ -194,12 +194,12 @@ Nagios - pull
 ---
 
 8.
-![Graph](https://github.com/loginochka/monitoring-systems/blob/main/monitoring-systems/media/Graph.png)
+![Graph](https://github.com/loginochka/monitoring-systems/blob/main/monitoring-02/media/Graph.png)
 
 ---
 
 9.
 
-![Metrics](https://github.com/loginochka/monitoring-systems/blob/main/monitoring-systems/media/metrics.png)
+![Metrics](https://github.com/loginochka/monitoring-systems/blob/main/monitoring-02/media/metrics.png)
 
 [LICENSE](https://github.com/loginochka/monitoring-systems/blob/main/LICENSE)
