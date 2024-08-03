@@ -23,6 +23,7 @@ Filebeat следует сконфигурировать для отправки
 [logstash.conf](https://github.com/loginochka/monitoring-systems/blob/main/monitoring-04/media/logstash.conf)
 
 [filebeat.yml](https://github.com/loginochka/monitoring-systems/blob/main/monitoring-04/media/filebeat.yml)
+
 ---
 
 ## Задание 2
