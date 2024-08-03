@@ -1,0 +1,124 @@
+services:
+  elastic-hot:
+    image: elasticsearch:8.14.3
+    container_name: elastic-hot
+    hostname: elastic-hot
+    ports:
+      - 9200:9200
+    volumes:
+      - ./elastic-hot:/usr/share/elasticsearch/data
+    environment:
+      - ELASTIC_PASSWORD=GmzyysqGfhjkm322
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=GmzyysqGfhjkm322
+      - node.name=elastic-hot
+      - cluster.name=elastic-cl
+      - discovery.seed_hosts=elastic-hot,elastic-warm
+      - cluster.initial_master_nodes=elastic-hot,elastic-warm
+      - node.roles=master,data_content,data_hot  
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "http.host=0.0.0.0"
+      - xpack.security.enabled=false
+    networks:
+      - elk
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+
+  elastic-warm:
+    image: elasticsearch:8.14.3
+    container_name: elastic-warm
+    hostname: elastic-warm
+    volumes:
+      - ./elastic-warm:/usr/share/elasticsearch/data
+    environment:
+      - ELASTIC_PASSWORD=GmzyysqGfhjkm322
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=GmzyysqGfhjkm322
+      - node.name=elastic-warm
+      - cluster.name=elastic-cl
+      - discovery.seed_hosts=elastic-hot,elastic-warm
+      - cluster.initial_master_nodes=elastic-hot,elastic-warm
+      - node.roles=master,data_warm
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - "http.host=0.0.0.0"
+    networks:
+      - elk
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+  
+  kibana:
+    image: kibana:8.14.3
+    container_name: kibana
+    hostname: kibana
+    ports:
+      - 5601:5601
+    networks:
+      - elk
+    restart: unless-stopped
+    environment:
+      - SERVER_NAME=kibana
+      - ELASTICSEARCH_HOSTS=["http://elastic-hot:9200","http://elastic-warm:9200"]
+      - ELASTICSEARCH_URL=http://elastic-hot:9200
+      - ELASTICSEARCH_PASSWORD=GmzyysqGfhjkm322
+      - ELASTICSEARCH_USERNAME=kibana_system
+    depends_on:
+      - elastic-hot
+  
+  logstash:
+    image: logstash:8.14.3
+    container_name: logstash
+    hostname: logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - xpack.monitoring.enabled=false
+      - ELASTIC_USER=elastic
+      - ELASTIC_PASSWORD=GmzyysqGfhjkm322
+      - ELASTICSEARCH_URL=http://elastic-hot:9200
+      - ELASTICSEARCH_HOSTS=["http://elastic-hot:9200","http://elastic-warm:9200"]
+    depends_on:
+      - elastic-hot
+    networks:
+      - elk
+    restart: unless-stopped
+  filebeat:
+    image: elastic/filebeat:8.14.3
+    container_name: filebeat
+    hostname: filebeat
+    user: root:989
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker:/var/lib/docker
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on: 
+      - elastic-hot
+    networks:
+      - elk
+    restart: unless-stopped
+  pinger:
+    image: python:alpine3.20
+    container_name: pinger
+    hostname: pinger
+    volumes: 
+      - ./pinger:/var/
+    entrypoint: python3 /var/run.py
+networks:
+  elk:
+    driver: bridge
+
